@@ -1,33 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const config = require("config");
 const { check, validationResult } = require("express-validator");
-const bcrypt = require("bcrypt");
 
 const User = require("../../models/User");
 
-// @route GET api/auth
-// @desc get authenticated user
-// @access public
-router.get("/", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
-  }
-});
-
-// @route POST api/auth
-// @desc Authenticate user & get token
+// @route  POST api/users
+// @desc   Register User
 // @access Public
+
 router.post(
   "/",
   [
+    check("name", "Name is required").notEmpty(),
     check("email", "Please include a valid email").isEmail(),
-    check("password", "Please include a valid password").exists(),
+    check(
+      "password",
+      "Please enter a password with 6 or more characters"
+    ).isLength({ min: 6 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -35,26 +27,24 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     //See if the user exists
     try {
       let user = await User.findOne({ email });
-      if (!user) {
+      if (user) {
         return res
           .status(400)
-          .json({ errors: [{ msg: "Invalid Credentials" }] });
+          .json({ errors: [{ msg: "User Already Exists" }] });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      // Ecrypt password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
 
-      if (!isMatch) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Invalid Credentials" }] });
-      }
+      await user.save();
 
-      //Return jsonwebtoken
+      // Return jsonwebtoken
       const payload = {
         user: {
           id: user.id,
