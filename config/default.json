@@ -1,5 +1,5 @@
 {
-    "mongoURI" : "mongodb+srv://admin:admin@cluster0.otrkx.mongodb.net/Cluster0?retryWrites=true&w=majority" ,
+    "mongoURI" : "mongodb+srv://admin:admin@cluster0.dyy5h.mongodb.net/ECommerceProject?retryWrites=true&w=majority",
     "jwtSecret" : "myjwttoken"
 
 }

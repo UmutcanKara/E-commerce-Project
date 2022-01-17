@@ -38,6 +38,13 @@ router.post(
           .json({ errors: [{ msg: "User Already Exists" }] });
       }
 
+      // Create User
+      user = new User({
+        name,
+        password,
+        email,
+      });
+
       // Ecrypt password
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
@@ -66,3 +73,4 @@ router.post(
     }
   }
 );
+module.exports = router;
